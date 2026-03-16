@@ -1,0 +1,41 @@
+<header class="relative z-10 flex h-18 items-center justify-between border-b border-white/10 bg-slate-950/60 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+  <div class="flex items-center gap-3">
+    <button class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8 bg-white/4 text-slate-400 transition hover:border-cyan-400/20 hover:bg-cyan-400/8 hover:text-cyan-200"
+            aria-label="Toggle sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.5" class="h-4 w-4">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3.75 6h16.5M3.75 12h16.5M3.75 18h16.5"/>
+      </svg>
+    </button>
+
+    <nav class="flex items-center gap-2 text-sm text-slate-400" aria-label="Breadcrumb">
+      <span>{{ section() }}</span>
+      <svg viewBox="0 0 20 20" fill="currentColor"
+           class="h-3 w-3 text-slate-600">
+        <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/>
+      </svg>
+      <span class="font-medium text-slate-100">{{ page() }}</span>
+    </nav>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <button class="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8 bg-white/4 text-slate-400 transition hover:border-orange-300/20 hover:bg-orange-300/8 hover:text-orange-100"
+            aria-label="Notifications">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.5" class="h-4 w-4">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+      </svg>
+      <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-orange-300 shadow-[0_0_12px_rgba(253,186,116,0.9)]"></span>
+    </button>
+
+    <div class="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-200">
+      <span class="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.9)]"></span>
+      Live
+    </div>
+
+    <span class="rounded-full border border-white/8 bg-white/4 px-3 py-1.5 font-[JetBrains_Mono] text-xs text-slate-400">{{ date() }}</span>
+  </div>
+</header>

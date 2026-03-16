@@ -1,0 +1,42 @@
+<div class="rounded-[30px] border border-white/10 bg-white/6 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+  <p class="text-lg font-semibold text-white">Player Distribution</p>
+  <p class="mt-1 text-sm text-slate-400">Active players by game mode</p>
+
+  <div class="relative mx-auto mt-6 flex h-40 w-40 items-center justify-center">
+    <svg viewBox="0 0 100 100" class="h-full w-full -rotate-90">
+      @for (slice of slices(); track slice.label) {
+        <circle cx="50" cy="50" r="40"
+                fill="none"
+                [attr.stroke]="slice.color"
+                stroke-width="12"
+                [attr.stroke-dasharray]="sliceDash(slice.players) + ' ' + circumference()"
+                [attr.stroke-dashoffset]="-slice.offset"
+                stroke-linecap="butt"/>
+      }
+    </svg>
+    <div class="absolute flex flex-col items-center">
+      <span class="text-3xl font-bold leading-none tracking-[-0.04em] text-white">
+        {{ totalPlayers() }}
+      </span>
+      <span class="mt-1 text-[10px] uppercase tracking-[0.26em] text-slate-500">
+        Players
+      </span>
+    </div>
+  </div>
+
+  <div class="mt-6 grid grid-cols-2 gap-x-5 gap-y-3">
+    @for (slice of slices(); track slice.label) {
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="h-2.5 w-2.5 shrink-0 rounded-sm" [style.background]="slice.color"></span>
+        <span class="truncate text-sm text-slate-400">{{ slice.label }}</span>
+        <span class="ml-auto shrink-0 text-sm font-semibold text-slate-100">
+          {{ slice.players }}
+        </span>
+      </div>
+    }
+  </div>
+
+  @if (trendLabel()) {
+    <p class="mt-5 text-center text-xs text-orange-200/70">{{ trendLabel() }}</p>
+  }
+</div>

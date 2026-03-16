@@ -1,0 +1,62 @@
+<div class="overflow-hidden rounded-[30px] border border-white/10 bg-white/6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+  <div class="flex flex-col gap-4 border-b border-white/8 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-lg font-semibold text-white">Activity Log</h2>
+      <p class="mt-1 text-sm text-slate-400">Real-time event stream</p>
+    </div>
+
+    <div class="relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+           class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0015.803 15.803z"/>
+      </svg>
+      <input
+        type="text"
+        placeholder="Search entries…"
+        [value]="filterQuery()"
+        (input)="filterQuery.set($any($event.target).value)"
+        class="w-full rounded-2xl border border-white/10 bg-slate-950/60 py-2.5 pl-10 pr-4 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyan-400/30 focus:bg-slate-950"
+        aria-label="Filter activity log"
+      />
+    </div>
+  </div>
+
+  <div class="hidden items-center gap-8 border-b border-white/8 px-6 py-3 md:grid md:grid-cols-[140px_minmax(0,1fr)_160px]">
+    <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+      Status
+    </span>
+    <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+      Entity
+    </span>
+    <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 text-right">
+      Timestamp
+    </span>
+  </div>
+
+  @for (entry of filtered(); track entry.name + entry.timestamp) {
+    <div class="flex flex-col gap-4 border-b border-white/6 px-6 py-4 transition hover:bg-white/4 md:grid md:grid-cols-[140px_minmax(0,1fr)_160px] md:items-center md:gap-8">
+      <div class="flex shrink-0 flex-wrap items-center gap-4">
+        <span [class]="pillClass(entry.status)">
+          <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+          {{ entry.status }}
+        </span>
+      </div>
+
+      <div class="flex min-w-0 flex-col gap-0.5">
+        <p class="truncate text-sm font-medium text-white">{{ entry.name }}</p>
+        @if (entry.uuid) {
+          <span class="font-[JetBrains_Mono] text-xs text-slate-500">{{ entry.uuid }}</span>
+        }
+      </div>
+
+      <span class="font-[JetBrains_Mono] text-xs text-slate-500 md:text-right">{{ entry.timestamp }}</span>
+    </div>
+  }
+
+  @empty {
+    <div class="px-6 py-12 text-center text-sm text-slate-500">
+      No matching entries.
+    </div>
+  }
+</div>

@@ -1,0 +1,146 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-4xl font-bold tracking-[-0.06em] text-white">Groups</h1>
+    <p class="mt-2 max-w-4xl text-sm text-slate-400">Runtime groups modeled from the KryoCloud API contract: template, Java version, service type, scaling bounds, memory bounds, and player caps</p>
+  </div>
+
+  <section class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+    <article class="rounded-[30px] border border-cyan-400/15 bg-slate-950/45 p-6 backdrop-blur-xl">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Create Group</h2>
+          <p class="mt-1 text-sm text-slate-400">Saved locally now through async methods so the same calls can later swap to axios without changing the page flow.</p>
+        </div>
+        <span class="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100">ready for api</span>
+      </div>
+
+      <div class="mt-5 rounded-3xl border border-white/8 bg-white/4 p-5">
+        <p class="text-sm text-slate-300">Launch the group creator popup to define template, scaling, memory limits, and service type in one modal flow.</p>
+        <button type="button" (click)="openCreateGroupDialog()" class="mt-4 inline-flex items-center rounded-full border border-cyan-400/25 bg-cyan-400/12 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/18">Create group popup</button>
+      </div>
+    </article>
+
+    <article class="rounded-[30px] border border-white/10 bg-white/6 p-6 backdrop-blur-xl">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Group Operations</h2>
+          <p class="mt-1 text-sm text-slate-400">Start new services directly from any saved group. New service rows appear immediately in the Services page and overview activity log.</p>
+        </div>
+        <span class="text-xs uppercase tracking-[0.16em] text-slate-500">{{ groups().length }} active groups</span>
+      </div>
+
+      <div class="mt-5 grid gap-3">
+        @for (group of groups(); track group.id) {
+          <div class="flex flex-wrap items-center gap-3 rounded-3xl border border-white/8 bg-slate-950/45 px-4 py-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-white">{{ group.name }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ group.templateName }} · {{ group.services }} running services</p>
+            </div>
+            <span [class]="serviceTypeTone(group.serviceType)">{{ group.serviceType }}</span>
+            <button type="button" (click)="startService(group.id)" [class]="actionButtonTone('start')">Start service</button>
+          </div>
+        }
+      </div>
+    </article>
+  </section>
+
+  <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+      <p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Registered Groups</p>
+      <p class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white">{{ groups().length }}</p>
+      <p class="mt-2 text-sm text-slate-400">From `IGroupManager.groups()`</p>
+    </article>
+
+    <article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+      <p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Running Services</p>
+      <p class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white">{{ totalServices() }}</p>
+      <p class="mt-2 text-sm text-slate-400">Summed from `IGroup.serviceCount()`</p>
+    </article>
+
+    <article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+      <p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Network Capacity</p>
+      <p class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white">{{ totalCapacity() }}</p>
+      <p class="mt-2 text-sm text-slate-400">`maxPlayers * serviceCount` across groups</p>
+    </article>
+
+    <article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+      <p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Java Baseline</p>
+      <p class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white">{{ javaVersions() }}</p>
+      <p class="mt-2 text-sm text-slate-400">Declared by `IGroup.javaVersion()`</p>
+    </article>
+  </section>
+
+  <section>
+    <article class="overflow-hidden rounded-[30px] border border-white/10 bg-white/6 p-6 backdrop-blur-xl">
+      <div class="flex items-start justify-between gap-4 border-b border-white/8 pb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Group Matrix</h2>
+          <p class="mt-1 text-sm text-slate-400">View grounded in `IGroup` and `IService` fields from the backend API</p>
+        </div>
+
+        <div class="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-200">
+          Max autoscale trigger {{ maxAutoscaleThreshold() }}%
+        </div>
+      </div>
+
+      <div class="mt-5 overflow-x-auto">
+        <table class="min-w-[760px] w-full border-collapse">
+          <thead>
+            <tr>
+              <th class="border-b border-white/8 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Group</th>
+              <th class="border-b border-white/8 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Type</th>
+              <th class="border-b border-white/8 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Template</th>
+              <th class="border-b border-white/8 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Java</th>
+              <th class="border-b border-white/8 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Replicas</th>
+              <th class="border-b border-white/8 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Memory</th>
+              <th class="border-b border-white/8 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Players</th>
+              <th class="border-b border-white/8 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Scale Out</th>
+              <th class="border-b border-white/8 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (group of groups(); track group.id) {
+              <tr class="transition hover:bg-white/4">
+                <td class="border-b border-white/6 px-3 py-4">
+                  <div class="flex flex-col gap-1">
+                    <span class="font-medium text-white">{{ group.name }}</span>
+                    <span class="text-xs text-slate-500">{{ group.services }} live services</span>
+                  </div>
+                </td>
+                <td class="border-b border-white/6 px-3 py-4 text-sm text-slate-200">
+                  <span [class]="serviceTypeTone(group.serviceType)">
+                    {{ group.serviceType }}
+                  </span>
+                </td>
+                <td class="border-b border-white/6 px-3 py-4 text-sm text-slate-300">{{ group.templateName }}</td>
+                <td class="border-b border-white/6 px-3 py-4 text-sm text-slate-300">Java {{ group.javaVersion }}</td>
+                <td class="border-b border-white/6 px-3 py-4 text-sm text-slate-300">
+                  <div class="space-y-2">
+                    <span>{{ group.minCount }} - {{ group.maxCount }}</span>
+                    <div class="h-1.5 overflow-hidden rounded-full bg-white/8">
+                      <div class="h-full rounded-full bg-linear-to-r from-cyan-300 to-sky-500" [style.width.%]="replicaFill(group)"></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="border-b border-white/6 px-3 py-4 text-sm text-slate-300">{{ group.minMemory }} - {{ group.maxMemory }} MB</td>
+                <td class="border-b border-white/6 px-3 py-4 text-sm text-slate-300">{{ group.maxPlayers }}</td>
+                <td class="border-b border-white/6 px-3 py-4 text-sm text-slate-300">
+                  <div class="space-y-2">
+                    <span>{{ group.startNewPercent }}%</span>
+                    <div class="h-1.5 overflow-hidden rounded-full bg-white/8">
+                      <div class="h-full rounded-full" [class]="scaleTone(group.startNewPercent)" [style.width.%]="group.startNewPercent"></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="border-b border-white/6 px-3 py-4">
+                  <button type="button" (click)="startService(group.id)" [class]="actionButtonTone('start')">Start service</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+</div>

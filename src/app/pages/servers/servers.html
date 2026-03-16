@@ -1,0 +1,99 @@
+<div class="space-y-6">
+	<div>
+		<h1 class="text-4xl font-bold tracking-[-0.06em] text-white">Services</h1>
+		<p class="mt-2 text-sm text-slate-400">Runtime service registry backed by localStorage today and async service methods ready for axios-based transport later.</p>
+	</div>
+
+	<section class="rounded-[30px] border border-cyan-400/15 bg-slate-950/45 p-6 backdrop-blur-xl">
+		<div class="flex flex-wrap items-center justify-between gap-4">
+			<div>
+				<h2 class="text-lg font-semibold text-white">Service Management</h2>
+				<p class="mt-1 text-sm text-slate-400">Launch new services, manage live entries, and watch runtime values adjust automatically every 5 seconds with random player movement of +/-1 to 5.</p>
+			</div>
+			<div class="flex items-center gap-3">
+				<button type="button" (click)="openCreateServiceDialog()" class="inline-flex items-center rounded-full border border-cyan-400/25 bg-cyan-400/12 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/18">Launch service</button>
+			</div>
+		</div>
+	</section>
+
+	<section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+		<article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+			<p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Total Services</p>
+			<p class="mt-4 text-3xl font-bold tracking-[-0.04em] text-white">{{ totalServices() }}</p>
+			<p class="mt-2 text-sm text-slate-400">Across all managed groups</p>
+		</article>
+		<article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+			<p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Online</p>
+			<p class="mt-4 text-3xl font-bold tracking-[-0.04em] text-emerald-100">{{ onlineServices() }}</p>
+			<p class="mt-2 text-sm text-slate-400">Healthy active services</p>
+		</article>
+		<article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+			<p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Booting</p>
+			<p class="mt-4 text-3xl font-bold tracking-[-0.04em] text-amber-100">{{ bootingServices() }}</p>
+			<p class="mt-2 text-sm text-slate-400">Starting or restarting</p>
+		</article>
+		<article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+			<p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Affected</p>
+			<p class="mt-4 text-3xl font-bold tracking-[-0.04em] text-rose-100">{{ affectedServices() }}</p>
+			<p class="mt-2 text-sm text-slate-400">Need operator attention</p>
+		</article>
+	</section>
+
+	<section class="rounded-[30px] border border-white/10 bg-white/6 p-6 backdrop-blur-xl">
+		<div class="mb-3 flex items-center justify-between">
+			<h2 class="text-lg font-semibold text-white">Service Registry</h2>
+			<span class="text-xs uppercase tracking-[0.16em] text-slate-500">{{ services().length }} entries · 5s tick</span>
+		</div>
+		<div class="space-y-2">
+			@for (service of services(); track service.id) {
+				<div class="space-y-3 rounded-3xl border border-white/8 bg-slate-950/45 px-4 py-3">
+					<div class="flex flex-wrap items-center gap-4">
+						<div class="min-w-0">
+							<p class="truncate text-sm font-medium text-white">{{ service.name }}</p>
+							<div class="mt-1 flex flex-wrap items-center gap-2">
+								<span [class]="serviceTypeClass(service.serviceType)">{{ service.serviceType }}</span>
+								<p class="text-xs text-slate-500">{{ service.groupName }} · {{ service.templateName }}</p>
+								<p class="text-xs text-slate-500">Host {{ service.host }}</p>
+								<p class="text-xs text-slate-500">Uptime {{ service.uptime }}</p>
+							</div>
+						</div>
+						<span class="ml-auto font-[JetBrains_Mono] text-xs text-slate-400">{{ service.players }} / {{ service.maxPlayers }} players</span>
+						<span [class]="serverStatusClass(service.status)">{{ service.status }}</span>
+					</div>
+					<div class="flex flex-wrap items-center gap-2">
+						@if (service.status === 'Stopped') {
+							<button type="button" (click)="startService(service.id)" [class]="actionButtonTone('start')">Start</button>
+						} @else {
+							<button type="button" (click)="restartService(service.id)" [class]="actionButtonTone('restart')">Restart</button>
+							<button type="button" (click)="stopService(service)" [class]="actionButtonTone('stop')">Stop</button>
+						}
+						<button type="button" (click)="deleteService(service)" [class]="actionButtonTone('delete')">Delete</button>
+					</div>
+					<div class="space-y-1.5">
+						<div class="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-slate-500">
+							<span>Player Load</span>
+							<span>{{ playerLoad(service) }}%</span>
+						</div>
+						<div class="h-2 overflow-hidden rounded-full bg-white/8">
+							<div class="h-full rounded-full" [class]="playerLoadClass(playerLoad(service))" [style.width.%]="playerLoad(service)"></div>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	</section>
+
+	<section class="grid grid-cols-1 gap-4 md:grid-cols-3">
+		@for (pool of groupPools(); track pool.id) {
+			<article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+				<div class="flex items-center justify-between gap-3">
+					<h3 class="text-base font-semibold text-white">{{ pool.name }}</h3>
+					<span [class]="serviceTypeClass(pool.serviceType)">{{ pool.serviceType }}</span>
+				</div>
+				<p class="mt-2 text-sm text-slate-400">Template {{ pool.templateName }}</p>
+				<p class="mt-4 text-2xl font-bold tracking-[-0.04em] text-white">{{ pool.services }}</p>
+				<p class="mt-1 text-sm text-slate-400">Services in this pool</p>
+			</article>
+		}
+	</section>
+</div>

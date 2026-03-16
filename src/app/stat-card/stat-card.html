@@ -1,0 +1,21 @@
+<div class="relative flex h-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-white/6 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-cyan-400/20 hover:bg-white/8">
+  <div class="flex items-start justify-between gap-4">
+    <p class="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">{{ card().label }}</p>
+    <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.5" class="h-4 w-4">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              [attr.d]="icons[card().icon]"/>
+      </svg>
+    </span>
+  </div>
+
+  <p class="mt-5 text-3xl font-bold tracking-[-0.04em] text-white">{{ card().value }}</p>
+  <p class="mt-2 text-sm text-slate-400">{{ card().sub }}</p>
+
+  @if (card().fill !== undefined) {
+    <div class="mt-5 h-2 overflow-hidden rounded-full bg-white/8">
+      <div class="h-full rounded-full bg-linear-to-r from-cyan-300 to-sky-500 shadow-[0_0_14px_rgba(34,211,238,0.45)]" [style.width.%]="card().fill"></div>
+    </div>
+  }
+</div>

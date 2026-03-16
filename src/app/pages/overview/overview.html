@@ -1,0 +1,33 @@
+<div class="space-y-8">
+	<div class="flex flex-wrap items-end justify-between gap-4">
+		<div>
+			<h1 class="text-4xl font-bold tracking-[-0.06em] text-white">Mission Control</h1>
+			<p class="mt-2 max-w-3xl text-sm text-slate-400">Independent command surface for cluster and traffic orchestration</p>
+		</div>
+		<div class="flex items-center gap-3">
+			<button class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/8">Run simulation</button>
+			<button class="inline-flex items-center rounded-full border border-cyan-400/25 bg-cyan-400/12 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/18">Promote release</button>
+		</div>
+	</div>
+
+	<section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key metrics">
+		@for (card of stats(); track card.label) {
+			<app-kc-stat-card [card]="card"></app-kc-stat-card>
+		}
+	</section>
+
+	<section class="grid grid-cols-1 gap-4 xl:grid-cols-3" aria-label="Analytics">
+		<app-kc-donut-chart
+			[slices]="donutSlices"
+			[total]="donutTotal"
+			[trendLabel]="trendLabel"
+			[circumference]="donutCircumference"
+		></app-kc-donut-chart>
+		<app-kc-sparkline [series]="playerChart" uid="sessions"></app-kc-sparkline>
+		<app-kc-sparkline [series]="memoryChart" uid="heap"></app-kc-sparkline>
+	</section>
+
+	<section aria-label="Activity Log">
+		<app-kc-activity-log [entries]="activityLog()"></app-kc-activity-log>
+	</section>
+</div>

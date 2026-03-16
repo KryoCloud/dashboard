@@ -1,0 +1,14 @@
+<main class="relative flex h-screen overflow-hidden bg-slate-950 font-[Space_Grotesk] text-slate-100">
+	<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(251,146,60,0.14),transparent_24%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,1))]"></div>
+	<div class="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:72px_72px]"></div>
+
+	<app-kc-sidebar [navGroups]="navGroups"></app-kc-sidebar>
+
+	<section class="relative z-10 flex h-screen min-w-0 flex-1 flex-col overflow-hidden">
+		<app-kc-topbar section="KryoCloud" page="Control Surface" [date]="today"></app-kc-topbar>
+
+		<div class="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
+			<router-outlet></router-outlet>
+		</div>
+	</section>
+</main>

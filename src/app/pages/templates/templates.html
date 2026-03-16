@@ -1,0 +1,93 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-4xl font-bold tracking-[-0.06em] text-white">Templates</h1>
+    <p class="mt-2 text-sm text-slate-400">Blueprint catalog for repeatable infrastructure launches</p>
+  </div>
+
+  <section class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+    <article class="rounded-[30px] border border-cyan-400/15 bg-slate-950/45 p-6 backdrop-blur-xl">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Create Template</h2>
+          <p class="mt-1 text-sm text-slate-400">Stored in localStorage now, exposed through async service methods shaped for a future axios client.</p>
+        </div>
+        <span class="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100">local first</span>
+      </div>
+
+      <div class="mt-5 rounded-3xl border border-white/8 bg-white/4 p-5">
+        <p class="text-sm text-slate-300">Open the template creator popup to define image base, profile, and runtime version without leaving the current page context.</p>
+        <button type="button" (click)="openCreateTemplateDialog()" class="mt-4 inline-flex items-center rounded-full border border-cyan-400/25 bg-cyan-400/12 px-4 py-2.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/18">Create template popup</button>
+      </div>
+    </article>
+
+    <article class="rounded-[30px] border border-white/10 bg-white/6 p-6 backdrop-blur-xl">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Template Registry</h2>
+          <p class="mt-1 text-sm text-slate-400">Create once, then reference from group creation.</p>
+        </div>
+        <span class="text-xs uppercase tracking-[0.16em] text-slate-500">{{ templateRecords().length }} saved</span>
+      </div>
+
+      <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+        @for (image of templateRecords(); track image.id) {
+          <article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-base font-semibold text-white">{{ image.name }}</p>
+              <span class="inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]" [class]="baseClass(image.base)">{{ image.base }}</span>
+            </div>
+            <p class="mt-3 text-sm text-slate-400">Version: {{ image.version }}</p>
+            <p class="mt-1 text-sm text-slate-400">Java {{ image.javaVersion }}</p>
+            <div class="mt-3">
+              <span class="inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]" [class]="profileClass(image.profile)">{{ image.profile }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    </article>
+  </section>
+
+  <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+    @for (profile of launchProfiles; track profile.title) {
+      <article class="rounded-[28px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="text-base font-semibold text-white">{{ profile.title }}</h3>
+          <span class="inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]" [class]="launchProfileClass(profile.title)">{{ profile.title }}</span>
+        </div>
+        <div class="mt-3 h-2 overflow-hidden rounded-full bg-white/8">
+          <div class="h-full rounded-full bg-linear-to-r from-cyan-300 to-sky-500" [style.width.%]="launchProfileFill(profile.title)"></div>
+        </div>
+        <div class="mt-4 space-y-1 text-sm text-slate-300">
+          <p>CPU: {{ profile.cpu }}</p>
+          <p>RAM: {{ profile.ram }}</p>
+          <p>Disk: {{ profile.disk }}</p>
+        </div>
+      </article>
+    }
+  </section>
+
+  <section class="rounded-[30px] border border-white/10 bg-white/6 p-6 backdrop-blur-xl">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-white">Launch Profiles</h2>
+      <span class="text-xs uppercase tracking-[0.16em] text-slate-500">{{ launchProfiles.length }} presets</span>
+    </div>
+    <div class="space-y-2">
+      @for (profile of launchProfiles; track profile.title) {
+        <div class="flex flex-wrap items-center gap-4 rounded-3xl border border-white/8 bg-slate-950/45 px-4 py-3">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-3">
+              <p class="text-sm font-medium text-white">{{ profile.title }}</p>
+              <span class="inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]" [class]="launchProfileClass(profile.title)">{{ profile.title }}</span>
+            </div>
+            <div class="mt-2 h-2 overflow-hidden rounded-full bg-white/8">
+              <div class="h-full rounded-full bg-linear-to-r from-cyan-300 to-sky-500" [style.width.%]="launchProfileFill(profile.title)"></div>
+            </div>
+          </div>
+          <span class="text-sm text-slate-400">{{ profile.cpu }}</span>
+          <span class="text-sm text-slate-400">{{ profile.ram }}</span>
+          <span class="text-sm text-slate-400">{{ profile.disk }}</span>
+        </div>
+      }
+    </div>
+  </section>
+</div>
