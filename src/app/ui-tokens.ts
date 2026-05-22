@@ -1,4 +1,4 @@
-import { ActivityStatus, GroupServiceType, RuntimeServiceStatus } from './models';
+import { ActivityStatus, CloudServiceState, GroupServiceType, WrapperState } from './models';
 
 export type ActionButtonVariant = 'start' | 'restart' | 'stop' | 'delete' | 'remove';
 
@@ -18,18 +18,34 @@ export function serviceTypeBadgeClass(serviceType: GroupServiceType): string {
   }
 }
 
-export function runtimeStatusBadgeClass(status: RuntimeServiceStatus): string {
+export function serviceStateBadgeClass(status: CloudServiceState): string {
   switch (status) {
-    case 'Online':
+    case 'RUNNING':
       return `${regularBadgeBase} border-emerald-400/25 bg-emerald-400/10 text-emerald-100`;
-    case 'Starting':
+    case 'PREPARING':
+    case 'STARTING':
       return `${regularBadgeBase} border-cyan-400/25 bg-cyan-400/10 text-cyan-100`;
-    case 'Restarting':
+    case 'STOPPING':
       return `${regularBadgeBase} border-amber-300/25 bg-amber-300/10 text-amber-100`;
-    case 'Stopped':
+    case 'STOPPED':
       return `${regularBadgeBase} border-slate-400/25 bg-slate-400/10 text-slate-200`;
-    default:
+    case 'FAILED':
       return `${regularBadgeBase} border-rose-400/25 bg-rose-400/10 text-rose-100`;
+  }
+}
+
+export function wrapperStateBadgeClass(state: WrapperState): string {
+  switch (state) {
+    case 'AVAILABLE':
+      return `${regularBadgeBase} border-emerald-400/25 bg-emerald-400/10 text-emerald-100`;
+    case 'STARTING':
+      return `${regularBadgeBase} border-cyan-400/25 bg-cyan-400/10 text-cyan-100`;
+    case 'BUSY':
+      return `${regularBadgeBase} border-amber-300/25 bg-amber-300/10 text-amber-100`;
+    case 'DRAINING':
+      return `${regularBadgeBase} border-orange-400/25 bg-orange-400/10 text-orange-100`;
+    case 'OFFLINE':
+      return `${regularBadgeBase} border-slate-400/25 bg-slate-400/10 text-slate-200`;
   }
 }
 

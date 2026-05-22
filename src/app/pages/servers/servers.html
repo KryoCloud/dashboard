@@ -53,15 +53,15 @@
 							<div class="mt-1 flex flex-wrap items-center gap-2">
 								<span [class]="serviceTypeClass(service.serviceType)">{{ service.serviceType }}</span>
 								<p class="text-xs text-slate-500">{{ service.groupName }} · {{ service.templateName }}</p>
-								<p class="text-xs text-slate-500">Host {{ service.host }}</p>
-								<p class="text-xs text-slate-500">Uptime {{ service.uptime }}</p>
+								<p class="text-xs text-slate-500">{{ service.host }}:{{ service.port }}</p>
+								<p class="text-xs text-slate-500">Java {{ service.javaVersion }} · Uptime {{ service.uptime }}</p>
 							</div>
 						</div>
 						<span class="ml-auto font-[JetBrains_Mono] text-xs text-slate-400">{{ service.players }} / {{ service.maxPlayers }} players</span>
-						<span [class]="serverStatusClass(service.status)">{{ service.status }}</span>
+						<span [class]="serviceStateClass(service.status)">{{ service.status }}</span>
 					</div>
 					<div class="flex flex-wrap items-center gap-2">
-						@if (service.status === 'Stopped') {
+						@if (service.status === 'STOPPED') {
 							<button type="button" (click)="startService(service.id)" [class]="actionButtonTone('start')">Start</button>
 						} @else {
 							<button type="button" (click)="restartService(service.id)" [class]="actionButtonTone('restart')">Restart</button>

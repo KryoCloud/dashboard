@@ -1,6 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import {
   ActivityEntry,
+  CloudServiceState,
   CreateGroupInput,
   CreateServiceInput,
   CreateTemplateInput,
@@ -9,8 +10,9 @@ import {
   DashboardGroup,
   DashboardService,
   DashboardTemplate,
-  RuntimeServiceStatus,
   SaveAccountInput,
+  WrapperInfo,
+  WrapperState,
 } from './models';
 
 const STORAGE_KEYS = {
@@ -20,20 +22,20 @@ const STORAGE_KEYS = {
   accounts: 'kryocloud.accounts',
   apiKeys: 'kryocloud.apiKeys',
   activity: 'kryocloud.activity',
+  wrappers: 'kryocloud.wrappers',
 } as const;
 
 const TEMPLATE_SEED: DashboardTemplate[] = [
-  { id: 'tpl-gateway-gold', name: 'gateway-gold', base: 'ubuntu-22.04', version: '2.4.8', profile: 'network edge', javaVersion: '21' },
-  { id: 'tpl-api-balanced', name: 'api-balanced', base: 'debian-12', version: '1.9.3', profile: 'rest + queue', javaVersion: '21' },
-  { id: 'tpl-worker-thin', name: 'worker-thin', base: 'alpine-3.20', version: '1.2.1', profile: 'background jobs', javaVersion: '21' },
-  { id: 'tpl-cache-fast', name: 'cache-fast', base: 'ubuntu-22.04', version: '7.2.0', profile: 'in-memory cache', javaVersion: '17' },
+  { id: 'tpl-gateway-gold', name: 'gateway-gold', path: 'templates/gateway-gold' },
+  { id: 'tpl-api-balanced', name: 'api-balanced', path: 'templates/api-balanced' },
+  { id: 'tpl-worker-thin', name: 'worker-thin', path: 'templates/worker-thin' },
+  { id: 'tpl-cache-fast', name: 'cache-fast', path: 'templates/cache-fast' },
 ];
 
 const GROUP_SEED: DashboardGroup[] = [
   {
     id: 'grp-proxy-core',
     name: 'proxy-core',
-    templateId: 'tpl-gateway-gold',
     templateName: 'gateway-gold',
     javaVersion: '21',
     serviceType: 'PROXY',
@@ -47,7 +49,6 @@ const GROUP_SEED: DashboardGroup[] = [
   {
     id: 'grp-lobby-eu',
     name: 'lobby-eu',
-    templateId: 'tpl-api-balanced',
     templateName: 'api-balanced',
     javaVersion: '21',
     serviceType: 'LOBBY',
@@ -61,7 +62,6 @@ const GROUP_SEED: DashboardGroup[] = [
   {
     id: 'grp-survival',
     name: 'survival',
-    templateId: 'tpl-worker-thin',
     templateName: 'worker-thin',
     javaVersion: '21',
     serviceType: 'SERVER',
@@ -75,7 +75,6 @@ const GROUP_SEED: DashboardGroup[] = [
   {
     id: 'grp-bedwars',
     name: 'bedwars',
-    templateId: 'tpl-cache-fast',
     templateName: 'cache-fast',
     javaVersion: '17',
     serviceType: 'SERVER',
@@ -89,11 +88,17 @@ const GROUP_SEED: DashboardGroup[] = [
 ];
 
 const SERVICE_SEED: DashboardService[] = [
-  { id: 'svc-proxy-01', name: 'proxy-core-01', groupId: 'grp-proxy-core', groupName: 'proxy-core', templateName: 'gateway-gold', serviceType: 'PROXY', host: 'eu-edge-01', uptime: '12d 4h', players: 182, status: 'Online', maxPlayers: 500 },
-  { id: 'svc-proxy-02', name: 'proxy-core-02', groupId: 'grp-proxy-core', groupName: 'proxy-core', templateName: 'gateway-gold', serviceType: 'PROXY', host: 'eu-edge-02', uptime: '9d 3h', players: 164, status: 'Online', maxPlayers: 500 },
-  { id: 'svc-lobby-01', name: 'lobby-eu-01', groupId: 'grp-lobby-eu', groupName: 'lobby-eu', templateName: 'api-balanced', serviceType: 'LOBBY', host: 'eu-lobby-01', uptime: '3d 18h', players: 96, status: 'Restarting', maxPlayers: 220 },
-  { id: 'svc-survival-01', name: 'survival-01', groupId: 'grp-survival', groupName: 'survival', templateName: 'worker-thin', serviceType: 'SERVER', host: 'play-survival-01', uptime: '22d 6h', players: 48, status: 'Online', maxPlayers: 120 },
-  { id: 'svc-bedwars-01', name: 'bedwars-01', groupId: 'grp-bedwars', groupName: 'bedwars', templateName: 'cache-fast', serviceType: 'SERVER', host: 'play-bedwars-01', uptime: '31d 9h', players: 0, status: 'Degraded', maxPlayers: 64 },
+  { id: 'svc-proxy-01', serviceNumber: 1, name: 'proxy-core-01', groupId: 'grp-proxy-core', groupName: 'proxy-core', templateName: 'gateway-gold', javaVersion: '21', serviceType: 'PROXY', host: 'eu-edge-01', port: 25577, uptime: '12d 4h', players: 182, status: 'RUNNING', maxPlayers: 500, minMemory: 512, maxMemory: 1024, staticService: false },
+  { id: 'svc-proxy-02', serviceNumber: 2, name: 'proxy-core-02', groupId: 'grp-proxy-core', groupName: 'proxy-core', templateName: 'gateway-gold', javaVersion: '21', serviceType: 'PROXY', host: 'eu-edge-02', port: 25578, uptime: '9d 3h', players: 164, status: 'RUNNING', maxPlayers: 500, minMemory: 512, maxMemory: 1024, staticService: false },
+  { id: 'svc-lobby-01', serviceNumber: 1, name: 'lobby-eu-01', groupId: 'grp-lobby-eu', groupName: 'lobby-eu', templateName: 'api-balanced', javaVersion: '21', serviceType: 'LOBBY', host: 'eu-lobby-01', port: 25565, uptime: '3d 18h', players: 96, status: 'STOPPING', maxPlayers: 220, minMemory: 1024, maxMemory: 2048, staticService: false },
+  { id: 'svc-survival-01', serviceNumber: 1, name: 'survival-01', groupId: 'grp-survival', groupName: 'survival', templateName: 'worker-thin', javaVersion: '21', serviceType: 'SERVER', host: 'play-survival-01', port: 25565, uptime: '22d 6h', players: 48, status: 'RUNNING', maxPlayers: 120, minMemory: 2048, maxMemory: 4096, staticService: false },
+  { id: 'svc-bedwars-01', serviceNumber: 1, name: 'bedwars-01', groupId: 'grp-bedwars', groupName: 'bedwars', templateName: 'cache-fast', javaVersion: '17', serviceType: 'SERVER', host: 'play-bedwars-01', port: 25565, uptime: '31d 9h', players: 0, status: 'FAILED', maxPlayers: 64, minMemory: 1536, maxMemory: 3072, staticService: false },
+];
+
+const WRAPPER_SEED: WrapperInfo[] = [
+  { id: 'wrap-eu-01', hostname: 'eu-node-01', address: '10.0.1.10', osName: 'Linux', availableProcessors: 8, maxMemoryMb: 8192, usedMemoryMb: 3412, runningServices: 3, state: 'AVAILABLE', registeredAtMillis: Date.now() - 86400000, lastHeartbeatAtMillis: Date.now() - 2000 },
+  { id: 'wrap-eu-02', hostname: 'eu-node-02', address: '10.0.1.11', osName: 'Linux', availableProcessors: 4, maxMemoryMb: 4096, usedMemoryMb: 3900, runningServices: 2, state: 'BUSY', registeredAtMillis: Date.now() - 43200000, lastHeartbeatAtMillis: Date.now() - 3500 },
+  { id: 'wrap-us-01', hostname: 'us-node-01', address: '10.1.1.10', osName: 'Linux', availableProcessors: 16, maxMemoryMb: 16384, usedMemoryMb: 1024, runningServices: 0, state: 'DRAINING', registeredAtMillis: Date.now() - 172800000, lastHeartbeatAtMillis: Date.now() - 8000 },
 ];
 
 const ACCOUNT_SEED: DashboardAccount[] = [
@@ -127,12 +132,14 @@ export class DashboardDataService {
   private readonly accountsState = signal<DashboardAccount[]>(this.readCollection(STORAGE_KEYS.accounts, ACCOUNT_SEED));
   private readonly apiKeysState = signal<DashboardApiKey[]>(this.readCollection(STORAGE_KEYS.apiKeys, API_KEY_SEED));
   private readonly activityState = signal<ActivityEntry[]>(this.readCollection(STORAGE_KEYS.activity, ACTIVITY_SEED));
+  private readonly wrappersState = signal<WrapperInfo[]>(this.readCollection(STORAGE_KEYS.wrappers, WRAPPER_SEED));
 
   readonly templates = this.templatesState.asReadonly();
   readonly groups = this.groupsState.asReadonly();
   readonly services = this.servicesState.asReadonly();
   readonly accounts = this.accountsState.asReadonly();
   readonly apiKeys = this.apiKeysState.asReadonly();
+  readonly wrappers = this.wrappersState.asReadonly();
   readonly activityEntries = computed(() => this.activityState().slice(0, 12));
 
   constructor() {
@@ -147,10 +154,7 @@ export class DashboardDataService {
     const template: DashboardTemplate = {
       id: this.nextId('tpl'),
       name: input.name.trim(),
-      base: input.base.trim(),
-      version: input.version.trim(),
-      profile: input.profile.trim(),
-      javaVersion: input.javaVersion.trim() || '21',
+      path: input.path.trim() || `templates/${input.name.trim()}`,
     };
 
     this.templatesState.update((templates) => [template, ...templates]);
@@ -164,7 +168,7 @@ export class DashboardDataService {
   }
 
   async createGroup(input: CreateGroupInput): Promise<DashboardGroup> {
-    const template = this.templatesState().find((item) => item.id === input.templateId);
+    const template = this.templatesState().find((item) => item.name === input.templateName);
     if (!template) {
       throw new Error('Template not found');
     }
@@ -172,9 +176,8 @@ export class DashboardDataService {
     const group: DashboardGroup = {
       id: this.nextId('grp'),
       name: input.name.trim(),
-      templateId: template.id,
       templateName: template.name,
-      javaVersion: template.javaVersion,
+      javaVersion: input.javaVersion.trim() || '21',
       serviceType: input.serviceType,
       minCount: Number(input.minCount),
       maxCount: Number(input.maxCount),
@@ -205,16 +208,22 @@ export class DashboardDataService {
     const players = this.clampPlayers(input.players, group.maxPlayers);
     const service: DashboardService = {
       id: this.nextId('svc'),
+      serviceNumber: siblingCount,
       name: `${group.name}-${String(siblingCount).padStart(2, '0')}`,
       groupId: group.id,
       groupName: group.name,
       templateName: group.templateName,
+      javaVersion: group.javaVersion,
       serviceType: group.serviceType,
       host: input.host.trim() || `${group.name}.${group.serviceType.toLowerCase()}.local`,
-      uptime: status === 'Stopped' ? '0m' : '0m',
-      players: status === 'Stopped' ? 0 : players,
+      port: 25565,
+      uptime: '0m',
+      players: status === 'STOPPED' ? 0 : players,
       status,
       maxPlayers: group.maxPlayers,
+      minMemory: group.minMemory,
+      maxMemory: group.maxMemory,
+      staticService: false,
     };
 
     this.servicesState.update((services) => [service, ...services]);
@@ -224,13 +233,13 @@ export class DashboardDataService {
   }
 
   async startServiceFromGroup(groupId: string): Promise<DashboardService> {
-    return this.createService({ groupId, host: '', status: 'Starting', players: 0 }, 'started');
+    return this.createService({ groupId, host: '', status: 'STARTING', players: 0 }, 'started');
   }
 
   async startService(serviceId: string): Promise<DashboardService> {
     return this.updateService(serviceId, (service) => ({
       ...service,
-      status: 'Starting',
+      status: 'STARTING' as CloudServiceState,
       players: 0,
       uptime: '0m',
     }), 'started');
@@ -239,7 +248,7 @@ export class DashboardDataService {
   async restartService(serviceId: string): Promise<DashboardService> {
     return this.updateService(serviceId, (service) => ({
       ...service,
-      status: 'Restarting',
+      status: 'STOPPING' as CloudServiceState,
       players: Math.min(service.players, 2),
     }), 'started');
   }
@@ -247,7 +256,7 @@ export class DashboardDataService {
   async stopService(serviceId: string): Promise<DashboardService> {
     return this.updateService(serviceId, (service) => ({
       ...service,
-      status: 'Stopped',
+      status: 'STOPPED' as CloudServiceState,
       players: 0,
     }), 'stopped');
   }
@@ -344,7 +353,7 @@ export class DashboardDataService {
     let changed = false;
 
     const next = this.servicesState().map((service) => {
-      if (service.status === 'Stopped') {
+      if (service.status === 'STOPPED') {
         return service;
       }
 
@@ -353,14 +362,17 @@ export class DashboardDataService {
       let uptime = service.uptime;
       let serviceChanged = false;
 
-      if (status === 'Starting') {
-        status = 'Online';
+      if (status === 'PREPARING') {
+        status = 'STARTING';
+        serviceChanged = true;
+      } else if (status === 'STARTING') {
+        status = 'RUNNING';
         players = this.randomInt(0, Math.min(5, service.maxPlayers));
         uptime = '0m';
         serviceChanged = true;
-      } else if (status === 'Restarting') {
+      } else if (status === 'STOPPING') {
         if (Math.random() < 0.8) {
-          status = 'Online';
+          status = 'RUNNING';
           players = this.randomInt(0, Math.min(5, service.maxPlayers));
           uptime = '0m';
           serviceChanged = true;
@@ -372,18 +384,18 @@ export class DashboardDataService {
           serviceChanged = true;
         }
 
-        if (status === 'Online') {
+        if (status === 'RUNNING') {
           const roll = Math.random();
           if (roll < 0.05) {
-            status = 'Restarting';
+            status = 'STOPPING';
             players = Math.min(players, 2);
             serviceChanged = true;
           } else if (roll < 0.09) {
-            status = 'Degraded';
+            status = 'FAILED';
             serviceChanged = true;
           }
-        } else if (status === 'Degraded' && Math.random() < 0.35) {
-          status = 'Online';
+        } else if (status === 'FAILED' && Math.random() < 0.35) {
+          status = 'RUNNING';
           serviceChanged = true;
         }
 

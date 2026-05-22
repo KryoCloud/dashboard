@@ -41,7 +41,12 @@ export interface DonutSlice {
 }
 
 export type GroupServiceType = 'PROXY' | 'LOBBY' | 'SERVER';
-export type RuntimeServiceStatus = 'Online' | 'Starting' | 'Restarting' | 'Degraded' | 'Stopped';
+
+/** Maps to CloudServiceState in kryocloud-network */
+export type CloudServiceState = 'PREPARING' | 'STARTING' | 'RUNNING' | 'STOPPING' | 'STOPPED' | 'FAILED';
+
+/** Maps to WrapperState in kryocloud-network */
+export type WrapperState = 'STARTING' | 'AVAILABLE' | 'BUSY' | 'DRAINING' | 'OFFLINE';
 
 export type ActivityStatus = 'connected' | 'started' | 'stopped' | 'created';
 
@@ -52,27 +57,22 @@ export interface ActivityEntry {
   timestamp: string;
 }
 
+/** Maps to ITemplate — templates are filesystem directories on the node */
 export interface DashboardTemplate {
   id: string;
   name: string;
-  base: string;
-  version: string;
-  profile: string;
-  javaVersion: string;
+  path: string;
 }
 
 export interface CreateTemplateInput {
   name: string;
-  base: string;
-  version: string;
-  profile: string;
-  javaVersion: string;
+  path: string;
 }
 
+/** Maps to IGroup */
 export interface DashboardGroup {
   id: string;
   name: string;
-  templateId: string;
   templateName: string;
   javaVersion: string;
   serviceType: GroupServiceType;
@@ -86,7 +86,8 @@ export interface DashboardGroup {
 
 export interface CreateGroupInput {
   name: string;
-  templateId: string;
+  templateName: string;
+  javaVersion: string;
   serviceType: GroupServiceType;
   minCount: number;
   maxCount: number;
@@ -96,25 +97,47 @@ export interface CreateGroupInput {
   startNewPercent: number;
 }
 
+/** Maps to IService + CloudServiceState from ServiceStatePacket */
 export interface DashboardService {
   id: string;
   name: string;
+  serviceNumber: number;
   groupId: string;
   groupName: string;
   templateName: string;
+  javaVersion: string;
   serviceType: GroupServiceType;
   host: string;
+  port: number;
   uptime: string;
   players: number;
-  status: RuntimeServiceStatus;
+  status: CloudServiceState;
   maxPlayers: number;
+  minMemory: number;
+  maxMemory: number;
+  staticService: boolean;
 }
 
 export interface CreateServiceInput {
   groupId: string;
   host: string;
-  status: RuntimeServiceStatus;
+  status: CloudServiceState;
   players: number;
+}
+
+/** Maps to WrapperSnapshot in kryocloud-node */
+export interface WrapperInfo {
+  id: string;
+  hostname: string;
+  address: string;
+  osName: string;
+  availableProcessors: number;
+  maxMemoryMb: number;
+  usedMemoryMb: number;
+  runningServices: number;
+  state: WrapperState;
+  registeredAtMillis: number;
+  lastHeartbeatAtMillis: number;
 }
 
 export interface DashboardAccount {

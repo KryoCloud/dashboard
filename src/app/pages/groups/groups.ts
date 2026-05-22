@@ -1,9 +1,11 @@
 import { Component, computed, effect, inject } from '@angular/core';
 import { DashboardDataService } from '../../dashboard-data.service';
-import { CreateGroupInput, DashboardGroup, GroupServiceType } from '../../models';
+import { CreateGroupInput, GroupServiceType } from '../../models';
 import Swal from 'sweetalert2';
-import { kryoSwal, modalFieldClass, modalLabelClass, renderModalSelect } from '../../swal';
+import { initCustomSelects, kryoSwal, modalFieldClass, modalLabelClass, renderCustomSelect } from '../../swal';
 import { actionButtonClass, serviceTypeBadgeClass } from '../../ui-tokens';
+
+import type { DashboardGroup } from '../../models';
 
 interface GroupSummary extends DashboardGroup {
   services: number;
@@ -27,29 +29,29 @@ export class Groups {
   readonly groups = computed<GroupSummary[]>(() =>
     this.groupRecords().map((group) => ({
       ...group,
-      services: this.serviceRecords().filter((service) => service.groupId === group.id && service.status !== 'Stopped').length,
+      services: this.serviceRecords().filter((service) => service.groupId === group.id && service.status !== 'STOPPED').length,
     }))
   );
 
-  readonly totalServices = computed(() => this.serviceRecords().filter((service) => service.status !== 'Stopped').length);
+  readonly totalServices = computed(() => this.serviceRecords().filter((service) => service.status !== 'STOPPED').length);
   readonly totalCapacity = computed(() => this.groups().reduce((total, group) => total + group.maxPlayers * group.services, 0));
   readonly maxAutoscaleThreshold = computed(() => Math.max(0, ...this.groupRecords().map((group) => group.startNewPercent)));
   readonly javaVersions = computed(() => [...new Set(this.groupRecords().map((group) => group.javaVersion))].join(', ') || 'n/a');
 
-  private defaultTemplateId = '';
+  private defaultTemplateName = '';
 
   constructor() {
     effect(() => {
       const templates = this.templateRecords();
-      if (!this.defaultTemplateId && templates.length > 0) {
-        this.defaultTemplateId = templates[0].id;
+      if (!this.defaultTemplateName && templates.length > 0) {
+        this.defaultTemplateName = templates[0].name;
       }
     });
   }
 
   async openCreateGroupDialog(): Promise<void> {
     const templateOptions = this.templateRecords()
-      .map((template) => `<option value="${template.id}" ${template.id === this.defaultTemplateId ? 'selected' : ''}>${template.name}</option>`)
+      .map((template) => `<option value="${template.name}" ${template.name === this.defaultTemplateName ? 'selected' : ''}>${template.name}</option>`)
       .join('');
 
     const result = await kryoSwal.fire<CreateGroupInput>({
@@ -57,6 +59,7 @@ export class Groups {
       confirmButtonText: 'Create group',
       showCancelButton: true,
       focusConfirm: false,
+      didOpen: (popup) => initCustomSelects(popup as HTMLElement),
       html: `
         <div class="grid gap-4 md:grid-cols-2 text-left">
           <label class="md:col-span-2">
@@ -65,15 +68,19 @@ export class Groups {
           </label>
           <label>
             <span class="${modalLabelClass}">Template</span>
-            ${renderModalSelect('group-template', templateOptions)}
+            ${renderCustomSelect('group-template', templateOptions)}
           </label>
           <label>
             <span class="${modalLabelClass}">Service type</span>
-            ${renderModalSelect('group-type', `
+            ${renderCustomSelect('group-type', `
               <option value="PROXY">PROXY</option>
               <option value="LOBBY">LOBBY</option>
               <option value="SERVER" selected>SERVER</option>
             `)}
+          </label>
+          <label>
+            <span class="${modalLabelClass}">Java version</span>
+            <input id="group-java" class="${modalFieldClass}" value="21" placeholder="21" />
           </label>
           <label>
             <span class="${modalLabelClass}">Min replicas</span>
@@ -105,8 +112,9 @@ export class Groups {
         const popup = Swal.getPopup();
         const value = <T extends HTMLElement>(selector: string) => popup?.querySelector<T>(selector);
         const name = (value<HTMLInputElement>('#group-name')?.value ?? '').trim();
-        const templateId = value<HTMLSelectElement>('#group-template')?.value ?? '';
-        const serviceType = (value<HTMLSelectElement>('#group-type')?.value ?? 'SERVER') as GroupServiceType;
+        const templateName = value<HTMLInputElement>('#group-template')?.value ?? '';
+        const serviceType = (value<HTMLInputElement>('#group-type')?.value ?? 'SERVER') as GroupServiceType;
+        const javaVersion = (value<HTMLInputElement>('#group-java')?.value ?? '21').trim();
         const minCount = Number(value<HTMLInputElement>('#group-min-count')?.value ?? 1);
         const maxCount = Number(value<HTMLInputElement>('#group-max-count')?.value ?? 2);
         const minMemory = Number(value<HTMLInputElement>('#group-min-memory')?.value ?? 1024);
@@ -114,7 +122,7 @@ export class Groups {
         const maxPlayers = Number(value<HTMLInputElement>('#group-max-players')?.value ?? 100);
         const startNewPercent = Number(value<HTMLInputElement>('#group-scale')?.value ?? 70);
 
-        if (!name || !templateId) {
+        if (!name || !templateName) {
           Swal.showValidationMessage('Name and template are required.');
           return;
         }
@@ -129,7 +137,7 @@ export class Groups {
           return;
         }
 
-        return { name, templateId, serviceType, minCount, maxCount, minMemory, maxMemory, maxPlayers, startNewPercent };
+        return { name, templateName, javaVersion, serviceType, minCount, maxCount, minMemory, maxMemory, maxPlayers, startNewPercent };
       }
     });
 

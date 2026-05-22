@@ -1,9 +1,9 @@
 import { Component, computed, inject } from '@angular/core';
 import { DashboardDataService } from '../../dashboard-data.service';
-import { DashboardService, GroupServiceType, RuntimeServiceStatus } from '../../models';
+import { CloudServiceState, DashboardService, GroupServiceType } from '../../models';
 import Swal from 'sweetalert2';
-import { kryoSwal, modalFieldClass, modalLabelClass, renderModalSelect } from '../../swal';
-import { actionButtonClass, runtimeStatusBadgeClass, serviceTypeBadgeClass } from '../../ui-tokens';
+import { initCustomSelects, kryoSwal, modalFieldClass, modalLabelClass, renderCustomSelect } from '../../swal';
+import { actionButtonClass, serviceStateBadgeClass, serviceTypeBadgeClass } from '../../ui-tokens';
 
 @Component({
   selector: 'app-services',
@@ -20,15 +20,15 @@ export class Services {
   readonly groups = this.data.groups;
 
   readonly totalServices = computed(() => this.services().length);
-  readonly onlineServices = computed(() => this.services().filter((service) => service.status === 'Online').length);
-  readonly bootingServices = computed(() => this.services().filter((service) => service.status === 'Starting' || service.status === 'Restarting').length);
-  readonly affectedServices = computed(() => this.services().filter((service) => service.status === 'Degraded' || service.status === 'Stopped').length);
+  readonly onlineServices = computed(() => this.services().filter((service) => service.status === 'RUNNING').length);
+  readonly bootingServices = computed(() => this.services().filter((service) => service.status === 'PREPARING' || service.status === 'STARTING' || service.status === 'STOPPING').length);
+  readonly affectedServices = computed(() => this.services().filter((service) => service.status === 'FAILED' || service.status === 'STOPPED').length);
   readonly groupPools = computed(() =>
     this.groups().map((group) => ({
       id: group.id,
       name: group.name,
       serviceType: group.serviceType,
-      services: this.services().filter((service) => service.groupId === group.id && service.status !== 'Stopped').length,
+      services: this.services().filter((service) => service.groupId === group.id && service.status !== 'STOPPED').length,
       templateName: group.templateName,
     }))
   );
@@ -48,55 +48,44 @@ export class Services {
       .map((group, index) => `<option value="${group.id}" ${index === 0 ? 'selected' : ''}>${group.name} · ${group.serviceType}</option>`)
       .join('');
 
-    const result = await kryoSwal.fire<{ groupId: string; host: string; status: RuntimeServiceStatus; players: number }>({
+    const result = await kryoSwal.fire<{ groupId: string; host: string; status: CloudServiceState; players: number }>({
       title: 'Launch Service',
       confirmButtonText: 'Create service',
       showCancelButton: true,
       focusConfirm: false,
+      didOpen: (popup) => initCustomSelects(popup as HTMLElement),
       html: `
         <div class="grid gap-4 text-left">
           <label>
             <span class="${modalLabelClass}">Group</span>
-            ${renderModalSelect('service-group', groupOptions)}
+            ${renderCustomSelect('service-group', groupOptions)}
           </label>
           <label>
             <span class="${modalLabelClass}">Host</span>
             <input id="service-host" class="${modalFieldClass}" placeholder="leave empty for automatic host" />
           </label>
-          <div class="grid gap-4 md:grid-cols-2">
-            <label>
-              <span class="${modalLabelClass}">Initial status</span>
-              ${renderModalSelect('service-status', `
-                <option value="Starting" selected>Starting</option>
-                <option value="Online">Online</option>
-                <option value="Stopped">Stopped</option>
-              `)}
-            </label>
-            <label>
-              <span class="${modalLabelClass}">Initial players</span>
-              <input id="service-players" type="number" min="0" value="0" class="${modalFieldClass}" />
-            </label>
-          </div>
+          <label>
+            <span class="${modalLabelClass}">Initial state</span>
+            ${renderCustomSelect('service-status', `
+              <option value="STARTING" selected>STARTING</option>
+              <option value="RUNNING">RUNNING</option>
+              <option value="STOPPED">STOPPED</option>
+            `)}
+          </label>
         </div>
       `,
       preConfirm: () => {
         const popup = Swal.getPopup();
-        const groupId = popup?.querySelector<HTMLSelectElement>('#service-group')?.value ?? '';
+        const groupId = popup?.querySelector<HTMLInputElement>('#service-group')?.value ?? '';
         const host = (popup?.querySelector<HTMLInputElement>('#service-host')?.value ?? '').trim();
-        const status = (popup?.querySelector<HTMLSelectElement>('#service-status')?.value ?? 'Starting') as RuntimeServiceStatus;
-        const players = Number(popup?.querySelector<HTMLInputElement>('#service-players')?.value ?? 0);
+        const status = (popup?.querySelector<HTMLInputElement>('#service-status')?.value ?? 'STARTING') as CloudServiceState;
 
         if (!groupId) {
           Swal.showValidationMessage('A target group is required.');
           return;
         }
 
-        if (!Number.isFinite(players) || players < 0) {
-          Swal.showValidationMessage('Initial players must be zero or greater.');
-          return;
-        }
-
-        return { groupId, host, status, players };
+        return { groupId, host, status, players: 0 };
       }
     });
 
@@ -104,7 +93,7 @@ export class Services {
       return;
     }
 
-    await this.data.createService(result.value, result.value.status === 'Stopped' ? 'created' : 'started');
+    await this.data.createService(result.value, result.value.status === 'STOPPED' ? 'created' : 'started');
   }
 
   async startService(serviceId: string): Promise<void> {
@@ -145,8 +134,8 @@ export class Services {
     await this.data.deleteService(service.id);
   }
 
-  serverStatusClass(status: string): string {
-    return runtimeStatusBadgeClass(status as RuntimeServiceStatus);
+  serviceStateClass(status: CloudServiceState): string {
+    return serviceStateBadgeClass(status);
   }
 
   serviceTypeClass(serviceType: GroupServiceType): string {

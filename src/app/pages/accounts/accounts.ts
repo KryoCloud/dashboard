@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { DashboardDataService } from '../../dashboard-data.service';
 import { SaveAccountInput } from '../../models';
 import Swal from 'sweetalert2';
-import { kryoSwal, modalFieldClass, modalLabelClass, renderModalSelect } from '../../swal';
+import { initCustomSelects, kryoSwal, modalFieldClass, modalLabelClass, renderCustomSelect } from '../../swal';
 import { accountAccessBadgeClass, actionButtonClass, apiScopeBadgeClass } from '../../ui-tokens';
 
 @Component({
@@ -25,6 +25,7 @@ export class Accounts {
       confirmButtonText: 'Save account',
       showCancelButton: true,
       focusConfirm: false,
+      didOpen: (popup) => initCustomSelects(popup as HTMLElement),
       html: `
         <div class="grid gap-4 md:grid-cols-2 text-left">
           <label>
@@ -41,7 +42,7 @@ export class Accounts {
           </label>
           <label>
             <span class="${modalLabelClass}">Access</span>
-            ${renderModalSelect('account-access', `
+            ${renderCustomSelect('account-access', `
               <option value="Full">Full</option>
               <option value="Deploy + Logs">Deploy + Logs</option>
               <option value="Deploy">Deploy</option>
@@ -55,7 +56,7 @@ export class Accounts {
         const name = (popup?.querySelector<HTMLInputElement>('#account-name')?.value ?? '').trim();
         const email = (popup?.querySelector<HTMLInputElement>('#account-email')?.value ?? '').trim();
         const role = (popup?.querySelector<HTMLInputElement>('#account-role')?.value ?? '').trim();
-        const access = popup?.querySelector<HTMLSelectElement>('#account-access')?.value ?? 'Read only';
+        const access = popup?.querySelector<HTMLInputElement>('#account-access')?.value ?? 'Read only';
 
         if (!name || !email) {
           Swal.showValidationMessage('Name and email are required.');
